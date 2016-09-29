@@ -1,0 +1,4 @@
+iter_max: 100
+keep_best: 5
+iter_out: 30
+full_pop: 500
