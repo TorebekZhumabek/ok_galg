@@ -8,16 +8,19 @@
 using namespace std;
 using namespace ok_galg;
 
-int main(void)
+int main(int argc, char ** argv)
 {
     std::srand(std::time(0));
-
 
     // load configuration for genetic algorithm
     YAML::Node config = YAML::LoadFile("../config.yaml");
 
-    // load city cost from YAML
-    YAML::Node data = YAML::LoadFile("../tsp.yaml");
+    // load travel cost from YAML
+
+    std::string path = "../tsp.yaml";
+    if(argc > 1)
+        path = std::string(argv[1]);
+    YAML::Node data = YAML::LoadFile(path);
     YAML::Node cities = data["cities"];
     const unsigned int N = cities.size();
     std::vector<std::vector<double> > nodes(N);
@@ -36,7 +39,7 @@ int main(void)
 
 
     // multi-run in threads
-    t.Copy(ok_galg::SolveMultiThread<Travel>(config, 40, 4, false));
+    t.Copy(ok_galg::SolveMultiThread<Travel>(config, 200, 10, false));
 
     cout << "Final" << endl;
     t.Print();
@@ -52,6 +55,10 @@ int main(void)
         cout << cities[t.ordering_[i]].as<string>() << " -> ";
     cout << cities[t.ordering_[0]].as<string>() << endl;
     cout << endl;
+
+    YAML::Node solution = data["solution"];
+    if(!solution.IsNull())
+        cout << "Best known solution: " << solution << endl;
 
 
 

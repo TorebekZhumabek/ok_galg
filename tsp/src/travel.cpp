@@ -46,6 +46,7 @@ void Travel::CrossAndMutate(Travel &_father, Travel &_mother)
     unsigned int n = rand_int(2, n_-3);
   //  Print("    crossing between ", ordering_);
   //  Print("                 and ", _other.ordering_);    
+    ordering_.clear();
     ordering_.reserve(n_);
     unsigned int i;
     for(i=0;i<n;++i)
