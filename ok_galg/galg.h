@@ -13,7 +13,7 @@ namespace ok_galg
 {
 
 // perform a single run with a random population
-template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), const unsigned int &_t=0, const unsigned int &_run=0)
+template<class T> T SolveSingleRun(T &best, const YAML::Node &config = YAML::Node(), const unsigned int &_t=0, const unsigned int &_run=0)
 {
     // read config parameters
     int keep_best = 5;
@@ -43,7 +43,7 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
     std::vector<T> population(full_population);
 
     std::nth_element(population.begin(), population.begin()+keep_best, population.end());
-    T best;best.Copy(population[0]);
+    best.Copy(population[0]);
 
     // loop until exit conditions
     unsigned int i, iter=0,iter_follow=0;
@@ -115,25 +115,25 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
 
 // perform a given number of runs and returns the best one in _best
 // not to be used directly
-template<class T> void SolveMultiRun(const YAML::Node &config = YAML::Node(), const unsigned int &_thread_n = 0, unsigned int *_run = 0, const unsigned int &_runs = 0, T &_best = T(), bool display = false)
+template<class T> void SolveMultiRun(T &best, const YAML::Node &config = YAML::Node(), const unsigned int &_thread_n = 0, const unsigned int &_runs = 0, bool display = false)
 {
     T indiv;
     bool first = true;
     unsigned int run;
     std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(100*_thread_n));
 
-    while(*_run < _runs)
+    unsigned int base_run = (_thread_n-1) * _runs;
+    for(unsigned int run=0;run<_runs;++run)
     {
-        run = ++(*_run);
 
-        std::cout << "Run #" << run << " in thread #" << _thread_n << std::endl;
+        std::cout << "Run #" << base_run + run << " in thread #" << _thread_n << std::endl;
         if(display)
-            indiv.Copy(SolveSingleRun<T>(config, _thread_n, run));
+            SolveSingleRun(indiv, config, _thread_n, base_run + run);
         else
-            indiv.Copy(SolveSingleRun<T>(config));
-        if(first || indiv.cost < _best.cost)
+            SolveSingleRun(indiv, config);
+        if(first || indiv.cost < best.cost)
         {
-            _best.Copy(indiv);
+            best.Copy(indiv);
             first = false;
         }
     }
@@ -142,22 +142,23 @@ template<class T> void SolveMultiRun(const YAML::Node &config = YAML::Node(), co
 
 
 // performs a given number of runs across a given number fo threads, returns the overall best result
-template<class T> T SolveMultiThread(const YAML::Node &config = YAML::Node(), const unsigned int &_runs = 10, unsigned int _n_threads = 1, bool display = false)
+template<class T> T SolveMultiThread(T &best, const YAML::Node &config = YAML::Node(), const unsigned int &_runs = 10, unsigned int _n_threads = 1, bool display = false)
 {
     if(_n_threads > _runs)
         _n_threads = _runs;
     std::vector<std::thread> t;
     std::vector<T> bests(_n_threads);
-    unsigned int run = 0;
+
+    unsigned int div = _runs / _n_threads;
+    std::cout << "runs per thread: " << div << std::endl;
 
     for(unsigned int i=0;i<_n_threads;++i)
-            t.push_back(std::thread(SolveMultiRun<T>, config, i+1, &run, _runs, std::ref(bests[i]), display));
+            t.push_back(std::thread(SolveMultiRun<T>, std::ref(bests[i]), config, i+1, div, display));
 
     for(unsigned int i=0;i<_n_threads;++i)
         t[i].join();
 
     // compare results and return best individual
-    T best;
     best.Copy(bests[0]);
     for(auto &other: bests)
         if(other.cost < best.cost)
