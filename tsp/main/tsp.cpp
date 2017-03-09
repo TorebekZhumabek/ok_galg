@@ -37,9 +37,8 @@ int main(int argc, char ** argv)
     // single-run solver
     //t.Copy(ok_galg::SolveSingleRun<Travel>(config, 0, 0));
 
-
     // multi-run in threads
-    t.Copy(ok_galg::SolveMultiThread<Travel>(config, 200, 10, false));
+    t.Copy(ok_galg::SolveMultiThread<Travel>(config, 200, 5, false));
 
     cout << "Final" << endl;
     t.Print();
@@ -57,7 +56,7 @@ int main(int argc, char ** argv)
     cout << endl;
 
     YAML::Node solution = data["solution"];
-    if(!solution.IsNull())
+    if(!solution.IsNull() && argc > 1)
         cout << "Best known solution: " << solution << endl;
 
 

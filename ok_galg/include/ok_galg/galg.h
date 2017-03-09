@@ -19,7 +19,7 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
     int keep_best = 5;
     int iter_max = 100;
     int iter_out = 30;
-    int full_population = 500;
+    int full_population = 500;    
 
     if(!config.IsNull())
     {
@@ -33,16 +33,14 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
             iter_out = config["iter_out"].as<double>();
 
         if(!config["full_pop"].IsNull())
-            full_population = config["full_pop"].as<double>();
+            full_population = 2*((config["full_pop"].as<int>()+1)/2);;
     }
     const int half_population = full_population/2;
 
-
-
     // init first population from random individuals
-    std::vector<T> population(full_population);
+    std::vector<T> population(full_population + half_population);
 
-    std::nth_element(population.begin(), population.begin()+keep_best, population.end());
+    std::nth_element(population.begin(), population.begin()+keep_best, population.begin()+full_population);
     T best;best.Copy(population[0]);
 
     // loop until exit conditions
@@ -53,15 +51,12 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
         spaces += "              ";
     while(iter++ < iter_max && iter_follow< iter_out)   // max iteration and max iteration where the best is always the same
     {
-        std::vector<T> population_new(full_population);
         if(_t != 0)
             std::cout << spaces << _t << ":" << _run << ":" << iter << std::endl;
-        //else
-        //    std::cout << "iter " << iter << "---------------" << std::endl;
 
         // we keep the best individuals anyway
         for(i=0;i<keep_best;++i)
-            population_new[i].Copy(population[i]);
+            population[full_population+i].Copy(population[i]);
 
         // selection, 1 vs 1 tournament to fill half of the population
         for(i=keep_best;i<half_population;++i)
@@ -71,31 +66,31 @@ template<class T> T SolveSingleRun(const YAML::Node &config = YAML::Node(), cons
             while(n1 == n2)
                 n2 = rand_int(0,full_population);
             if(population[n1].cost < population[n2].cost)
-                population_new[i].Copy(population[n1]);
+                population[full_population+i].Copy(population[n1]);
             else
-                population_new[i].Copy(population[n2]);
+                population[full_population+i].Copy(population[n2]);
         }
 
+        // put new elements at front of new population
+        for(i=0;i<half_population;++i)
+            population[i].Copy(population[full_population+i]);
 
         // crossing and mutation to fill other half of the new pop
         for(i=half_population;i<full_population;++i)
         {
-            n1 = rand_int(0,full_population);
-            n2 = rand_int(0,full_population);
+            n1 = rand_int(0,half_population);
+            n2 = rand_int(0,half_population);
             while(n1 == n2)
-                n2 = rand_int(0,full_population);
+                n2 = rand_int(0,half_population);
             //   std::cout << "  new " << i << " is crossing between " << n1 << " and " << n2 << std::endl;
             // cross between parents + compute cost
-            population_new[i].CrossAndMutate(population[n1],population[n2]);
+            population[i].CrossAndMutate(population[n1],population[n2]);
         }
 
-        // update population and costs
-        for(i=0;i<full_population;++i)
-            population[i].Copy(population_new[i]);
-        std::nth_element(population.begin(), population.begin()+keep_best, population.end());
+        // update costs
+        std::nth_element(population.begin(), population.begin()+keep_best, population.begin()+full_population);
 
         // check for best individual
-
         if(population[0] < best)
         {
             // found new best individual
