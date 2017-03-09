@@ -3,7 +3,7 @@
 #include <travel.h>
 #include <yaml-cpp/yaml.h>
 #include <map>
-#include <time.h>
+#include <chrono>
 
 using namespace std;
 using namespace ok_galg;
@@ -33,12 +33,16 @@ int main(int argc, char ** argv)
 
     Travel t(nodes, true);    
 
+    std::chrono::time_point<std::chrono::system_clock> start, end;
+    start = std::chrono::system_clock::now();
 
     // single-run solver
-    //t.Copy(ok_galg::SolveSingleRun<Travel>(config, 0, 0));
+    //ok_galg::SolveSingleRun(t, config, 1, 1);
 
     // multi-run in threads
-    t.Copy(ok_galg::SolveMultiThread<Travel>(config, 200, 5, false));
+    ok_galg::SolveMultiThread(t, config, 200, 4, false);
+
+    end = std::chrono::system_clock::now();
 
     cout << "Final" << endl;
     t.Print();
@@ -58,6 +62,9 @@ int main(int argc, char ** argv)
     YAML::Node solution = data["solution"];
     if(!solution.IsNull() && argc > 1)
         cout << "Best known solution: " << solution << endl;
+
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
 
 
 
