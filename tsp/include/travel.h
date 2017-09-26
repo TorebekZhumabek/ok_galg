@@ -1,11 +1,9 @@
 #ifndef Travel_H
 #define Travel_H
 
-#include <ok_galg/indiv.h>
 #include <vector>
 
-
-class Travel : public ok_galg::Indiv
+class Travel
 {
 public:
     std::vector<unsigned int> ordering_;
@@ -18,7 +16,10 @@ public:
     void CrossAndMutate(Travel &_father, Travel &_mother);
     void Print();
 
+    double cost;
+
 protected:
+
     static std::vector<std::vector<double> > nodes_;    
     static unsigned int n_;
     static bool closed_;

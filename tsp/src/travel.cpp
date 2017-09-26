@@ -4,13 +4,20 @@
 #include <string>
 
 using namespace std;
-using namespace ok_galg;
+
+inline unsigned int rand_int(const unsigned int &_start, const unsigned int &_length)
+{
+    return rand()%_length+_start;
+}
+
+
 
 // static variables
 std::vector<std::vector<double> > Travel::nodes_ = std::vector<std::vector<double> >();
 unsigned int Travel::n_ = 0;
 std::vector<unsigned int> Travel::base_ordering_ = std::vector<unsigned int>();
 bool Travel::closed_ = false;
+
 
 // constructor with static init
 Travel::Travel(std::vector<std::vector<double> > _nodes, bool _closed)
@@ -21,11 +28,13 @@ Travel::Travel(std::vector<std::vector<double> > _nodes, bool _closed)
     for(unsigned int i=0;i<n_;++i)
         base_ordering_[i] = i;
     closed_ = _closed;
+
 }
 
 // randomize
 void Travel::Randomize()
 {
+    std::cout << "new random" << std::endl;
     ordering_ = base_ordering_;
     std::random_shuffle(ordering_.begin(),ordering_.end());
     ComputeCost();

@@ -6,11 +6,15 @@
 #include <functional>
 #include <chrono>
 #include <algorithm>
-#include <ok_galg/indiv.h>
 #include <yaml-cpp/yaml.h>
 
 namespace ok_galg
 {
+
+inline unsigned int rand_int(const unsigned int &_start, const unsigned int &_length)
+{
+    return rand()%_length+_start;
+}
 
 // perform a single run with a random population
 template<class T> T SolveSingleRun(T &best, const YAML::Node &config = YAML::Node(), const unsigned int &_t=0, const unsigned int &_run=0)
@@ -40,7 +44,9 @@ template<class T> T SolveSingleRun(T &best, const YAML::Node &config = YAML::Nod
     // init first population from random individuals
     std::vector<T> population(full_population + half_population);
 
-    std::nth_element(population.begin(), population.begin()+keep_best, population.begin()+full_population);
+    std::nth_element(population.begin(), population.begin()+keep_best,
+                     population.begin()+full_population,
+                     [](const T &i1, const T& i2) {return i1.cost < i2.cost;});
     best.Copy(population[0]);
 
     // loop until exit conditions
@@ -88,10 +94,12 @@ template<class T> T SolveSingleRun(T &best, const YAML::Node &config = YAML::Nod
         }
 
         // update costs
-        std::nth_element(population.begin(), population.begin()+keep_best, population.begin()+full_population);
+        std::nth_element(population.begin(), population.begin()+keep_best,
+                         population.begin()+full_population,
+                         [](const T &i1, const T& i2) {return i1.cost < i2.cost;});
 
         // check for best individual
-        if(population[0] < best)
+        if(population[0].cost < best.cost)
         {
             // found new best individual
             // reset counter
