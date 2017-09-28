@@ -1,12 +1,12 @@
 # Basic templated genetic algorithm in C++ 
 
-# Available calls to genetic algorithm solver
+This project proposes a single header with 3 possible ways to call a genetic algorithm
 
-The ok_galg project just consists in 1 header file, which is the genetic algorithm with 3 templated functions
+## Available calls to genetic algorithm solver
 
 1. solveSingleRun(T &indiv, YAML::Node config)  
 
-Runs 1 genetic algorithm based on the T class and optional configuration. 
+Runs 1 instance of genetic algorithm based on the T class and optional configuration. 
 
 1. solveMultiRun(T &indiv, int _runs = 0, YAML::Node config, bool display)  
 
