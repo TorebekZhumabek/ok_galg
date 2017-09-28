@@ -8,4 +8,4 @@ include_directories(include)
 add_library(${PROJECT_NAME} SHARED include/ok_galg/indiv.h include/ok_galg/galg.h)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 
-install (FILES include/ok_galg/indiv.h include/ok_galg/galg.h DESTINATION include/${PROJECT_NAME})
+install (FILES include/ok_galg/galg.h DESTINATION include/${PROJECT_NAME})

@@ -10,8 +10,6 @@ inline unsigned int rand_int(const unsigned int &_start, const unsigned int &_le
     return rand()%_length+_start;
 }
 
-
-
 // static variables
 std::vector<std::vector<double> > Travel::nodes_ = std::vector<std::vector<double> >();
 unsigned int Travel::n_ = 0;
@@ -28,19 +26,17 @@ Travel::Travel(std::vector<std::vector<double> > _nodes, bool _closed)
     for(unsigned int i=0;i<n_;++i)
         base_ordering_[i] = i;
     closed_ = _closed;
-
 }
 
 // randomize
-void Travel::Randomize()
+void Travel::randomize()
 {
-    std::cout << "new random" << std::endl;
     ordering_ = base_ordering_;
     std::random_shuffle(ordering_.begin(),ordering_.end());
-    ComputeCost();
+    computeCost();
 }
 
-void Travel::ComputeCost()
+void Travel::computeCost()
 {
     cost = 0;
     for(unsigned int i=1;i<n_;++i)
@@ -49,12 +45,10 @@ void Travel::ComputeCost()
         cost += nodes_[ordering_[n_-1]][ordering_[0]];
 }
 
-void Travel::CrossAndMutate(Travel &_father, Travel &_mother)
+void Travel::crossAndMutate(Travel &_father, Travel &_mother)
 {
     // crossing
     unsigned int n = rand_int(2, n_-3);
-  //  Print("    crossing between ", ordering_);
-  //  Print("                 and ", _other.ordering_);    
     ordering_.clear();
     ordering_.reserve(n_);
     unsigned int i;
@@ -63,28 +57,15 @@ void Travel::CrossAndMutate(Travel &_father, Travel &_mother)
     // index of last element in mother
     std::vector<unsigned int>::iterator it;
     unsigned int idx = std::distance(_mother.ordering_.begin(), std::find(_mother.ordering_.begin(),_mother.ordering_.end(),ordering_[n-1]));
-   // cout << "    crossing at " << n;
-  //  cout << ", is at " << idx << " in other" << endl;
-   // //Print("    starting from ", new_ordering);
 
-    // append ending of other ordering if not already in it
-    //if(idx !=_mother.ordering_.end())
-    {
-      //  cout << "    adding ending of other: ";
         for(it=_mother.ordering_.begin()+idx;it!=_mother.ordering_.end();++it)
         {
             if(std::find(ordering_.begin(),ordering_.end(),*it) == ordering_.end())
             {
                 ordering_.push_back(*it);
-           //     cout << *it << " ";
             }
         }
-      //  cout << endl;
-    }
-    // append beginning of other ordering if not already
-   // if(idx != _mother.ordering_.begin())
-    {
-      //  cout << "    adding beginning of other: ";
+
         for(it=_mother.ordering_.begin();it!=_mother.ordering_.begin()+idx;++it)
         {
             if(std::find(ordering_.begin(),ordering_.end(),*it) == ordering_.end())
@@ -93,9 +74,6 @@ void Travel::CrossAndMutate(Travel &_father, Travel &_mother)
              //   cout << *it << " ";
             }
         }
-       // cout << endl;
-    }
-  //  Print("                        final: ", new_ordering);
 
     // mutation: switch 2 elements
     n = rand_int(0,n_-1);
@@ -106,10 +84,10 @@ void Travel::CrossAndMutate(Travel &_father, Travel &_mother)
     unsigned int tmp = ordering_[n];
     ordering_[n] = ordering_[n2];
     ordering_[n2] = tmp;
-    ComputeCost();
+    computeCost();
 }
 
-void Travel::Print()
+void Travel::print()
 {
     cout << "cost: " << cost << endl;
     cout << "ordering: ";

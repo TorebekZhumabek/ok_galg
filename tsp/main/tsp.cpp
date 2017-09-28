@@ -8,9 +8,21 @@
 using namespace std;
 using namespace ok_galg;
 
+void printSummary(std::chrono::time_point<std::chrono::system_clock> start,
+                  Travel t,
+                  std::string legend)
+{
+    std::chrono::duration<double> elapsed_seconds =
+            std::chrono::system_clock::now()-start;
+    cout << legend << " in " << elapsed_seconds.count() << " s" << std::endl;
+    t.print();
+    cout << endl;
+}
+
 int main(int argc, char ** argv)
 {
     std::srand(std::time(0));
+
 
     // load configuration for genetic algorithm
     YAML::Node config = YAML::LoadFile("../config.yaml");
@@ -37,23 +49,30 @@ int main(int argc, char ** argv)
     start = std::chrono::system_clock::now();
 
     // single-run solver
-    //ok_galg::SolveSingleRun(t, config, 1, 1);
+    ok_galg::solveSingleRun(t, config);
+    printSummary(start, t, "Single run solution");
 
-    // multi-run in threads
-    ok_galg::SolveMultiThread(t, config, 200, 4, false);
 
-    end = std::chrono::system_clock::now();
+    // 50 runs without threading
+    start = std::chrono::system_clock::now();
+    ok_galg::solveMultiRun(t, 100, config, false);
+    printSummary(start, t, "Multi run solution");
 
-    cout << "Final" << endl;
-    t.Print();
+    // 200 runs in 4 threads
+    start = std::chrono::system_clock::now();
+    ok_galg::solveMultiThread(t, 200, 4, config, false);
+    printSummary(start, t, "Multi run x multi thread solution");
+
+    // detail solution
+    cout << "Detailed solution" << endl;
     for(unsigned int i=0;i<t.ordering_.size();++i)
         cout << cities[t.ordering_[i]].as<string>() << " -> ";
     cout << cities[t.ordering_[0]].as<string>() << endl;
     cout << endl;
 
-    t.Randomize();
-    cout << "Random" << endl;
-    t.Print();
+    t.randomize();
+    cout << "Random solution" << endl;
+    t.print();
     for(unsigned int i=0;i<t.ordering_.size();++i)
         cout << cities[t.ordering_[i]].as<string>() << " -> ";
     cout << cities[t.ordering_[0]].as<string>() << endl;
@@ -62,10 +81,4 @@ int main(int argc, char ** argv)
     YAML::Node solution = data["solution"];
     if(!solution.IsNull() && argc > 1)
         cout << "Best known solution: " << solution << endl;
-
-    std::chrono::duration<double> elapsed_seconds = end-start;
-    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
-
-
-
 }
