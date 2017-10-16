@@ -12,11 +12,6 @@
 namespace ok_galg
 {
 
-inline unsigned int rand_int(const unsigned int &_start, const unsigned int &_length)
-{
-    return rand()%_length+_start;
-}
-
 template<class T> bool compareCosts(const T &i1, const T& i2)
 {return i1.cost < i2.cost;}
 
@@ -56,7 +51,9 @@ template<class T> void solveSingleRun(T &best, const YAML::Node &config = YAML::
     std::nth_element(population.begin(), population.begin()+keep_best,
                      population.begin()+full_population,
                      compareCosts<T>);
-    best = population[0];
+    best = *(std::min_element(population.begin(),
+                              population.begin()+keep_best,
+                              compareCosts<T>));
 
     // loop until exit conditions
     unsigned int i, iter=0,iter_follow=0;
@@ -70,28 +67,28 @@ template<class T> void solveSingleRun(T &best, const YAML::Node &config = YAML::
         // selection, 1 vs 1 tournament to fill half of the population
         for(i=keep_best;i<half_population;++i)
         {
-            n1 = rand_int(0,full_population);
-            n2 = rand_int(0,full_population);
+            n1 = rand() % full_population;
+            n2 = rand() % full_population;
             while(n1 == n2)
-                n2 = rand_int(0,full_population);
-            if(population[n1].cost < population[n2].cost)
+                n2 = rand() % full_population;
+            if(compareCosts(population[n1], population[n2]))
                 population[full_population+i] = population[n1];
             else
                 population[full_population+i] = population[n2];
         }
 
         // put new elements at front of new population
-        for(i=0;i<half_population;++i)
-            population[i] = population[full_population+i];
+        std::swap_ranges(population.begin(),
+                         population.begin() + half_population,
+                         population.begin() + full_population);
 
         // crossing and mutation to fill other half of the new pop
-
         for(i=half_population;i<full_population;++i)
         {
-            n1 = rand_int(0,half_population);
-            n2 = rand_int(0,half_population);
+            n1 = rand() % half_population;
+            n2 = rand() % half_population;
             while(n1 == n2)
-                n2 = rand_int(0,half_population);
+                n2 = rand() % half_population;
             //   std::cout << "  new " << i << " is crossing between " << n1 << " and " << n2 << std::endl;
             // cross between parents + compute cost
             population[i].crossAndMutate(population[n1],population[n2]);
@@ -102,15 +99,18 @@ template<class T> void solveSingleRun(T &best, const YAML::Node &config = YAML::
         std::nth_element(population.begin(), population.begin()+keep_best,
                          population.begin()+full_population,
                          compareCosts<T>);
+        auto new_best = std::min_element(population.begin(),
+                                        population.begin()+keep_best,
+                                         compareCosts<T>);
 
         // check for best individual
-        if(population[0].cost < best.cost)
+        if(compareCosts(*new_best, best))
         {
             // found new best individual
             // reset counter
             iter_follow = 0;
             // update best
-            best = population[0];
+            best = *new_best;
         }
         else
             iter_follow += 1;   // always the same winner

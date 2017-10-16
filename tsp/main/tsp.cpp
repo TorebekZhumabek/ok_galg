@@ -10,12 +10,13 @@ using namespace ok_galg;
 
 void printSummary(std::chrono::time_point<std::chrono::system_clock> start,
                   Travel t,
-                  std::string legend)
+                  std::string legend,
+                  const YAML::Node & cities)
 {
     std::chrono::duration<double> elapsed_seconds =
             std::chrono::system_clock::now()-start;
-    cout << legend << " in " << elapsed_seconds.count() << " s" << std::endl;
-    t.print();
+    cout << legend << " in " << 1000*elapsed_seconds.count() << " ms" << std::endl;
+    t.print(cities);
     cout << endl;
 }
 
@@ -29,7 +30,7 @@ int main(int argc, char ** argv)
 
     // load travel cost from YAML
 
-    std::string path = "../tsp.yaml";
+    std::string path = "../tsp_fr.yaml";
     if(argc > 1)
         path = std::string(argv[1]);
     YAML::Node data = YAML::LoadFile(path);
@@ -43,40 +44,30 @@ int main(int argc, char ** argv)
             nodes[i][j] = data[i][j].as<double>();
     }
 
-    Travel t(nodes, true);    
+    Travel t(nodes, true);
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
     start = std::chrono::system_clock::now();
 
     // single-run solver
     ok_galg::solveSingleRun(t, config);
-    printSummary(start, t, "Single run solution");
+    printSummary(start, t, "Single run solution",cities );
 
 
     // 50 runs without threading
     start = std::chrono::system_clock::now();
     ok_galg::solveMultiRun(t, 100, config, false);
-    printSummary(start, t, "Multi run solution");
+    printSummary(start, t, "Multi run solution", cities);
 
     // 200 runs in 4 threads
     start = std::chrono::system_clock::now();
-    ok_galg::solveMultiThread(t, 200, 4, config, false);
-    printSummary(start, t, "Multi run x multi thread solution");
-
-    // detail solution
-    cout << "Detailed solution" << endl;
-    for(unsigned int i=0;i<t.ordering_.size();++i)
-        cout << cities[t.ordering_[i]].as<string>() << " -> ";
-    cout << cities[t.ordering_[0]].as<string>() << endl;
-    cout << endl;
+    ok_galg::solveMultiThread(t, 100, 4, config, false);
+    printSummary(start, t, "Multi run x multi thread solution", cities);
 
     t.randomize();
     cout << "Random solution" << endl;
-    t.print();
-    for(unsigned int i=0;i<t.ordering_.size();++i)
-        cout << cities[t.ordering_[i]].as<string>() << " -> ";
-    cout << cities[t.ordering_[0]].as<string>() << endl;
-    cout << endl;
+    t.print(cities);
+
 
     YAML::Node solution = data["solution"];
     if(!solution.IsNull() && argc > 1)

@@ -2,18 +2,27 @@
 #define Travel_H
 
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
 class Travel
 {
 public:
     std::vector<unsigned int> ordering_;
-    static std::vector<unsigned int> base_ordering_;
-    Travel() {randomize();}
+
+    Travel()
+    {
+        ordering_.resize(n_);
+        for(unsigned int i=0;i<n_;++i)
+            ordering_[i] = i;
+    }
+
     void randomize();
-    Travel(std::vector<std::vector<double> > _nodes, bool _closed = false);    
+
+    Travel(const std::vector<std::vector<double> > &_nodes, bool _closed = false);
+
     void computeCost();
-    void crossAndMutate(Travel &_father, Travel &_mother);
-    void print();
+    void crossAndMutate(const Travel &_father, const Travel &_mother);
+    void print(const YAML::Node& cities);
 
     inline static void waitForCosts() {}
 
